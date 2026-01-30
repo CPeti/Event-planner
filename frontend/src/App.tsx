@@ -3,6 +3,8 @@ import { PlanListView } from './components/PlanListView'
 import { PlanGridView } from './components/PlanGridView'
 import type { Plan, PlanGrid } from './types'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 type View = 'list' | 'grid'
 
 export default function App() {
@@ -52,7 +54,7 @@ export default function App() {
   const loadPlans = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/plans')
+      const response = await fetch(`${API_URL}/api/plans`)
       if (!response.ok) throw new Error(await response.text())
       const data = await response.json()
       setPlans(data)
@@ -69,8 +71,8 @@ export default function App() {
     setLoading(true)
     try {
       const url = typeof tokenOrId === 'string'
-        ? `http://localhost:8000/api/plans/by-token/${encodeURIComponent(tokenOrId)}`
-        : `http://localhost:8000/api/plans/${tokenOrId}/grid`
+        ? `${API_URL}/api/plans/by-token/${encodeURIComponent(tokenOrId)}`
+        : `${API_URL}/api/plans/${tokenOrId}/grid`
       
       const response = await fetch(url)
       if (!response.ok) throw new Error(await response.text())
@@ -78,7 +80,7 @@ export default function App() {
       if (typeof tokenOrId === 'string') {
         const plan = await response.json()
         setCurrentPlanId(plan.id)
-        const gridResponse = await fetch(`http://localhost:8000/api/plans/${plan.id}/grid`)
+        const gridResponse = await fetch(`${API_URL}/api/plans/${plan.id}/grid`)
         if (!gridResponse.ok) throw new Error(await gridResponse.text())
         const grid = await gridResponse.json()
         setGridData(grid)
@@ -102,7 +104,7 @@ export default function App() {
   const deletePlan = async (id: number) => {
     if (!confirm('Delete this plan?')) return
     try {
-      const response = await fetch(`http://localhost:8000/api/plans/${id}`, { method: 'DELETE' })
+      const response = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error(await response.text())
       
       if (currentPlanId === id) {
@@ -120,29 +122,20 @@ export default function App() {
   const deleteParticipant = async (participantId: number) => {
     if (!currentPlanId || !confirm('Delete this participant?')) return
     try {
-      const response = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/participants/${participantId}`, { method: 'DELETE' })
+      const response = await fetch(`${API_URL}/api/plans/${currentPlanId}/participants/${participantId}`, { method: 'DELETE' })
       if (!response.ok) throw new Error(await response.text())
       
-      const gridResponse = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/grid`)
-      const grid = await gridResponse.json()
-      setGridData(grid)
-      setError(null)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    }
-  }
-
-  const renamePlan = async (newName: string) => {
+      const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
     if (!currentPlanId || !newName.trim()) return
     try {
-      const response = await fetch(`http://localhost:8000/api/plans/${currentPlanId}`, {
+      const response = await fetch(`${API_URL}/api/plans/${currentPlanId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName }),
       })
       if (!response.ok) throw new Error(await response.text())
       
-      const gridResponse = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/grid`)
+      const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
       const grid = await gridResponse.json()
       setGridData(grid)
       await loadPlans()
@@ -155,14 +148,14 @@ export default function App() {
   const renameParticipant = async (participantId: number, newName: string) => {
     if (!currentPlanId || !newName.trim()) return
     try {
-      const response = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/participants/${participantId}`, {
+      const response = await fetch(`${API_URL}/api/plans/${currentPlanId}/participants/${participantId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName }),
       })
       if (!response.ok) throw new Error(await response.text())
       
-      const gridResponse = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/grid`)
+      const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
       const grid = await gridResponse.json()
       setGridData(grid)
       setError(null)
@@ -243,7 +236,7 @@ export default function App() {
                 await Promise.all(
                   Array.from(selectedCells).map((key) => {
                     const [p, d] = key.split('|')
-                    return fetch(`http://localhost:8000/api/plans/${currentPlanId}/availabilities/toggle`, {
+                    return fetch(`${API_URL}/api/plans/${currentPlanId}/availabilities/toggle`, {
                       method: 'PUT',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ participant_id: parseInt(p), date: d, is_available: newValue }),
@@ -251,7 +244,7 @@ export default function App() {
                   })
                 )
                 setSelectedCells(new Set())
-                const gridResponse = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/grid`)
+                const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
                 const grid = await gridResponse.json()
                 setGridData(grid)
                 setError(null)
@@ -266,13 +259,13 @@ export default function App() {
             onAddParticipant={async (name) => {
               if (!currentPlanId || !gridData) return
               try {
-                const response = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/participants`, {
+                const response = await fetch(`${API_URL}/api/plans/${currentPlanId}/participants`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ name, plan_id: currentPlanId }),
                 })
                 if (!response.ok) throw new Error(await response.text())
-                const gridResponse = await fetch(`http://localhost:8000/api/plans/${currentPlanId}/grid`)
+                const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
                 const grid = await gridResponse.json()
                 setGridData(grid)
                 setError(null)
