@@ -126,6 +126,15 @@ export default function App() {
       if (!response.ok) throw new Error(await response.text())
       
       const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
+      const grid = await gridResponse.json()
+      setGridData(grid)
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  const renamePlan = async (newName: string) => {
     if (!currentPlanId || !newName.trim()) return
     try {
       const response = await fetch(`${API_URL}/api/plans/${currentPlanId}`, {
