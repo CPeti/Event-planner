@@ -243,16 +243,18 @@ export default function App() {
               const newValue = !currentAvail
               
               try {
-                await Promise.all(
-                  Array.from(selectedCells).map((key) => {
-                    const [p, d] = key.split('|')
-                    return fetch(`${API_URL}/api/plans/${currentPlanId}/availabilities/toggle`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ participant_id: parseInt(p), date: d, is_available: newValue }),
-                    })
-                  })
-                )
+                const payload = Array.from(selectedCells).map((key) => {
+                  const [p, d] = key.split('|')
+                  return { participant_id: parseInt(p), date: d, is_available: newValue }
+                })
+
+                const response = await fetch(`${API_URL}/api/plans/${currentPlanId}/availabilities/batch`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+                })
+                if (!response.ok) throw new Error(await response.text())
+
                 setSelectedCells(new Set())
                 const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
                 const grid = await gridResponse.json()
