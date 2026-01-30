@@ -341,7 +341,7 @@ export function PlanGridView({
             <tr className="border-t-2 border-t-success/30">
               <td className="sticky left-0 z-20 px-3 py-2 font-bold text-success bg-gradient-to-r from-dark-table to-dark-card whitespace-nowrap border border-dark-border border-r-2 border-r-success/30 border-t-2 border-t-success/30 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-dark-table shadow-sm">
                 <div className="flex items-center gap-2">
-                  <span>Total Free</span>
+                  <span>Total</span>
                 </div>
               </td>
               {dates.map((d) => (
