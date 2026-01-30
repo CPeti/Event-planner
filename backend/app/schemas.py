@@ -70,6 +70,11 @@ class AvailabilityToggle(BaseModel):
     is_available: bool
 
 
+class AvailabilityBatchResult(BaseModel):
+    updated_count: int
+    deleted_count: int
+
+
 class GridSummary(BaseModel):
     """Per-date count of available participants."""
     date: date
