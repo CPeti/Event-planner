@@ -6,3 +6,9 @@ pythonVersion = "3.11"
 
 [build.nodejs]
 nodeVersion = "18"
+
+[build.nodejs.build]
+cmds = [
+  "cd frontend && npm install && npm run build && cd ..",
+  "cd backend && pip install -r requirements.txt && cd .."
+]
