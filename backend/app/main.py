@@ -1,9 +1,6 @@
 from contextlib import asynccontextmanager
-import os
-from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from .database import engine, get_db, Base
@@ -53,7 +50,3 @@ async def health():
     return {"status": "ok"}
 
 
-# Serve built React frontend
-frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
-if frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
