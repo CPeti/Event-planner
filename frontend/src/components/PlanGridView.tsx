@@ -215,7 +215,7 @@ export function PlanGridView({
                 }
               }}
               disabled={!participantName.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               + Add
             </button>
@@ -258,7 +258,7 @@ export function PlanGridView({
           <tbody>
             {gridData.participants.map((p) => (
               <tr key={p.id} className="group hover:bg-slate-700/30 transition-colors">
-                <td className="sticky left-0 z-10 px-3 py-3 text-left bg-slate-800 group-hover:bg-slate-700/30 font-medium border border-slate-700 border-r-2 border-r-blue-500/20 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800 group-hover:after:bg-slate-700/30 transition-colors">
+                <td className="sticky left-0 z-10 px-3 py-3 text-left bg-slate-800 group-hover:bg-slate-700 font-medium border border-slate-700 border-r-2 border-r-blue-500/20 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800 group-hover:after:bg-slate-700 transition-colors">
                   {editingParticipantId === p.id ? (
                     <div className="flex items-center gap-2">
                       <input
@@ -353,7 +353,7 @@ export function PlanGridView({
               </tr>
             ))}
             <tr className="border-t-2 border-t-blue-500/30">
-              <td className="sticky left-0 z-20 px-3 py-2 font-bold text-blue-400 bg-gradient-to-r from-slate-800 to-slate-800/50 whitespace-nowrap border border-slate-700 border-r-2 border-r-blue-500/30 border-t-2 border-t-blue-500/30 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800">
+              <td className="sticky left-0 z-20 px-3 py-2 font-bold text-blue-400 bg-slate-800 whitespace-nowrap border border-slate-700 border-r-2 border-r-blue-500/30 border-t-2 border-t-blue-500/30 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800">
                 <div className="flex items-center gap-2">
                   <span>Total</span>
                 </div>
