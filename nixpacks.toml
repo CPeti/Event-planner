@@ -1,0 +1,8 @@
+[build]
+providers = ["nodejs", "python"]
+
+[build.python]
+pythonVersion = "3.11"
+
+[build.nodejs]
+nodeVersion = "18"
