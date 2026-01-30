@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { Plan } from '../types'
 
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin
+
 interface PlanListViewProps {
   plans: Plan[]
   loading: boolean
@@ -64,7 +66,7 @@ export function PlanListView({ plans, loading, onOpenPlan, onDeletePlan }: PlanL
           onClose={() => setShowModal(false)}
           onCreate={async (name, start, end) => {
             try {
-              const response = await fetch('http://localhost:8000/api/plans', {
+              const response = await fetch(`${API_URL}/api/plans`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, start_date: start, end_date: end }),

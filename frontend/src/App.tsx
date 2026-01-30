@@ -3,7 +3,8 @@ import { PlanListView } from './components/PlanListView'
 import { PlanGridView } from './components/PlanGridView'
 import type { Plan, PlanGrid } from './types'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use VITE_API_URL if set, otherwise use current origin (same domain)
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin
 
 type View = 'list' | 'grid'
 
