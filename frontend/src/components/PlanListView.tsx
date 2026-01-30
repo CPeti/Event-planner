@@ -17,6 +17,7 @@ export function PlanListView({ plans, loading, onOpenPlan, onDeletePlan }: PlanL
   return (
     <div>
       <h1 className="mb-6">Event plans</h1>
+      <h1 className="mb-6">{API_URL}</h1>
       
       <div className="mb-6">
         <button onClick={() => setShowModal(true)} className="btn-primary">
