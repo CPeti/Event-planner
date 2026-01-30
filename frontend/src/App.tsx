@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { PlanListView } from './components/PlanListView'
 import { PlanGridView } from './components/PlanGridView'
 import type { Plan, PlanGrid } from './types'

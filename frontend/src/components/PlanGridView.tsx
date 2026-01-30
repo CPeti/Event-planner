@@ -21,7 +21,6 @@ interface PlanGridViewProps {
 export function PlanGridView({
   gridData,
   loading,
-  currentPlanId,
   selectionStart,
   selectedCells,
   onBack,
@@ -35,7 +34,6 @@ export function PlanGridView({
   onRenameParticipant,
 }: PlanGridViewProps) {
   const [participantName, setParticipantName] = useState('')
-  const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 })
   const [isEditingPlanName, setIsEditingPlanName] = useState(false)
   const [editPlanName, setEditPlanName] = useState(gridData?.plan.name || '')
   const [editingParticipantId, setEditingParticipantId] = useState<number | null>(null)
@@ -209,7 +207,6 @@ export function PlanGridView({
 
       <div
         className="grid-scrollbar overflow-x-auto bg-dark-table rounded-lg border border-dark-border shadow-lg select-none"
-        onScroll={(e) => setScrollPos({ left: e.currentTarget.scrollLeft, top: e.currentTarget.scrollTop })}
       >
         <table className="border-separate border-spacing-0 w-full text-sm border border-dark-border bg-dark-table">
           <thead>

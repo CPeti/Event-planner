@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import type { Plan } from '../types'
 
 interface PlanListViewProps {
@@ -9,7 +9,7 @@ interface PlanListViewProps {
   onDeletePlan: (planId: number) => void
 }
 
-export function PlanListView({ plans, loading, onNewPlan, onOpenPlan, onDeletePlan }: PlanListViewProps) {
+export function PlanListView({ plans, loading, onOpenPlan, onDeletePlan }: PlanListViewProps) {
   const [showModal, setShowModal] = useState(false)
 
   return (
