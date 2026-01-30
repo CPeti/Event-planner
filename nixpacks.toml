@@ -1,17 +1,13 @@
-[build]
-providers = ["nodejs", "python"]
-
-[build.python]
-pythonVersion = "3.11"
-
-[build.nodejs]
-nodeVersion = "18"
+[providers]
+nodejs = "18"
+python = "3.11"
 
 [build.nodejs.build]
 cmds = [
-  "cd frontend && npm install && npm run build && cd ..",
-  "cd backend && pip install -r requirements.txt && cd .."
+  "cd frontend && npm install && npm run build && cd .."
 ]
 
-[start]
-cmd = "bash start.sh"
+[build.python.build]
+cmds = [
+  "cd backend && pip install -r requirements.txt && cd .."
+]
