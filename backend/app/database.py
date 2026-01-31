@@ -26,25 +26,14 @@ settings = Settings()
 # PostgreSQL driver handles async connections natively
 connect_args = {}
 
-
-@retry(
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=16),
-    before=before_log(logger, logging.INFO),
-    after=after_log(logger, logging.INFO),
+# Create engine without retries at import time
+# Retries will happen during lifespan initialization in main.py
+engine = create_async_engine(
+    settings.database_url,
+    echo=False,
+    connect_args=connect_args,
+    pool_pre_ping=True,  # Verify connections before using them
 )
-def create_engine_with_retry():
-    """Create database engine with retry logic using tenacity."""
-    logger.info(f"Connecting to database: {settings.database_url.split('@')[-1]}")
-    return create_async_engine(
-        settings.database_url,
-        echo=False,
-        connect_args=connect_args,
-        pool_pre_ping=True,  # Verify connections before using them
-    )
-
-
-engine = create_engine_with_retry()
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
