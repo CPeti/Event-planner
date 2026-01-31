@@ -2,25 +2,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from tenacity import retry, stop_after_attempt, wait_exponential, before_log, after_log
-import logging
 import os
 
 from .database import engine, get_db, Base
 from .models import Plan, Participant, Availability
 from .routers import plans, participants, availabilities
 
-logger = logging.getLogger(__name__)
 
-
-@retry(
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=16),
-    before=before_log(logger, logging.INFO),
-    after=after_log(logger, logging.INFO),
-)
-async def initialize_database():
-    """Initialize database with retry logic using tenacity."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         # Add share_token to existing plans table (SQLite) if missing
@@ -32,11 +22,6 @@ async def initialize_database():
                 if cur.fetchone() is None:
                     sync_conn.execute(text("ALTER TABLE plans ADD COLUMN share_token VARCHAR(64)"))
             await conn.run_sync(add_share_token_if_missing)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await initialize_database()
     yield
     await engine.dispose()
 

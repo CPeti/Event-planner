@@ -1,10 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from pydantic_settings import BaseSettings
-from tenacity import retry, stop_after_attempt, wait_exponential, before_log, after_log
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
