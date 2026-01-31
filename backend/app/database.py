@@ -1,6 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from pydantic_settings import BaseSettings
+from tenacity import retry, stop_after_attempt, wait_exponential, before_log, after_log
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -22,11 +26,25 @@ settings = Settings()
 # PostgreSQL driver handles async connections natively
 connect_args = {}
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=False,
-    connect_args=connect_args,
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=16),
+    before=before_log(logger, logging.INFO),
+    after=after_log(logger, logging.INFO),
 )
+def create_engine_with_retry():
+    """Create database engine with retry logic using tenacity."""
+    logger.info(f"Connecting to database: {settings.database_url.split('@')[-1]}")
+    return create_async_engine(
+        settings.database_url,
+        echo=False,
+        connect_args=connect_args,
+        pool_pre_ping=True,  # Verify connections before using them
+    )
+
+
+engine = create_engine_with_retry()
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
