@@ -4,23 +4,28 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Default: SQLite (no server needed). Set DATABASE_URL for PostgreSQL.
-    database_url: str = "sqlite+aiosqlite:///./event_planner.db"
+    """
+    Load DATABASE_URL from environment variables (Railway, system env, .env file).
+    Priority:
+    1. Environment variable: DATABASE_URL
+    2. .env file: DATABASE_URL
+    3. Default: postgresql+asyncpg://postgres:postgres@localhost:5432/event_planner
+    """
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/event_planner"
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
 
 
 settings = Settings()
-# SQLite needs connect_args for async; PostgreSQL does not
+# PostgreSQL driver handles async connections natively
 connect_args = {}
-if settings.database_url.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
 
 engine = create_async_engine(
     settings.database_url,
     echo=False,
-    connect_args=connect_args if connect_args else {},
+    connect_args=connect_args,
 )
 AsyncSessionLocal = async_sessionmaker(
     engine,
