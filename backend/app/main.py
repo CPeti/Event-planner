@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from tenacity import retry, stop_after_attempt, wait_exponential, before_log, after_log
 import logging
+import os
 
 from .database import engine, get_db, Base
 from .models import Plan, Participant, Availability
@@ -45,9 +46,21 @@ app = FastAPI(
     description="Find dates that work for everyone",
     lifespan=lifespan,
 )
+
+# Load allowed origins from environment variable or use defaults
+allowed_origins = [
+    "http://localhost:5173",  # Local Vite dev server
+    "http://localhost:4173",  # Local Vite preview
+]
+
+# Add production frontend URL from Railway env var if present
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for Railway deployment
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
