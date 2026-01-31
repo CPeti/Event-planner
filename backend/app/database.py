@@ -19,13 +19,20 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Convert DATABASE_URL to use async driver (asyncpg) if needed
+# Railway provides postgres:// or postgresql://, but we need postgresql+asyncpg://
+database_url = settings.database_url
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 # PostgreSQL driver handles async connections natively
 connect_args = {}
 
-# Create engine without retries at import time
-# Retries will happen during lifespan initialization in main.py
 engine = create_async_engine(
-    settings.database_url,
+    database_url,
     echo=False,
     connect_args=connect_args,
     pool_pre_ping=True,  # Verify connections before using them
