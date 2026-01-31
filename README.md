@@ -15,36 +15,62 @@ Web app to find dates that work for everyone. Replaces the usual Excel sheet: co
 
 ## Run locally
 
-### 1. Database
+### Prerequisites
 
-**Default: SQLite** — No setup. The app uses `event_planner.db` in the backend directory (or current working directory).
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL 14+ (running locally or via Docker)
 
-**Optional: PostgreSQL** — Set in `backend/.env`:
+### 1. Database setup
+
+Start PostgreSQL (via Docker):
 
 ```bash
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/event_planner
+docker run --name event-planner-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=event_planner \
+  -p 5432:5432 \
+  -v pgdata:/var/lib/postgresql/data \
+  -d postgres:16
 ```
 
-Then have PostgreSQL running and create the DB: `createdb event_planner`
+Or use an existing PostgreSQL instance and create the database:
 
-### 2. Backend
+```bash
+createdb -U postgres event_planner
+```
+
+### 2. Backend setup
+
+Navigate to the backend folder and create a Python virtual environment:
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate   # Windows
+.venv\Scripts\activate       # Windows
 # source .venv/bin/activate  # macOS/Linux
+```
+
+Install dependencies and run:
+
+```bash
 pip install -r requirements.txt
 python run.py
 ```
 
-Or from the project root: `python backend/run.py` (so the `app` module is found).  
-If you prefer uvicorn directly, run it from inside `backend`: `uvicorn app.main:app --reload`.
+Or with uvicorn directly:
 
-API: http://localhost:8000  
-Docs: http://localhost:8000/docs
+```bash
+uvicorn app.main:app --reload
+```
 
-### 3. Frontend
+Backend API: http://localhost:8000  
+API docs (Swagger): http://localhost:8000/docs
+
+### 3. Frontend setup
+
+In a new terminal, navigate to the frontend folder:
 
 ```bash
 cd frontend
@@ -52,17 +78,14 @@ npm install
 npm run dev
 ```
 
-App: http://localhost:5173
+Frontend app: http://localhost:5173
 
-## Usage
+### Environment variables
 
-1. Create a plan (name + start/end date).
-2. Open the plan to see the interactive grid (dates as columns, participants as rows).
-3. Add participants by entering their names and clicking "+ Add person".
-4. Edit participant names by clicking the pencil icon on hover.
-5. Delete participants by clicking the X button on hover.
-6. Click and drag cells to select multiple dates for a participant, then click to toggle availability (green = free, gray = busy).
-7. Drag participant rows to reorder them in the grid.
-8. Edit the plan name by clicking the pencil icon next to the title.
-9. Copy the share link to send to others.
-10. The "Total Free" row shows how many people are available per date with a color gradient (red = few, green = many).
+The backend reads `DATABASE_URL` from `backend/.env.production`.
+
+Default (local PostgreSQL):
+```
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/event_planner
+```
+
