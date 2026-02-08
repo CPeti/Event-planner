@@ -190,10 +190,9 @@ export function PlanGridView({
           )}
         </div>
 
-        {/* Add Participant Bar */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 mb-8">
-          <label className="block text-slate-300 text-sm font-semibold mb-3">Add Participant</label>
-          <div className="flex gap-2 sm:gap-3">
+        <div className="max-w-fit mx-auto">
+          {/* Add Participant Bar */}
+          <div className="flex items-center gap-3 mb-6">
             <input
               type="text"
               value={participantName}
@@ -204,8 +203,8 @@ export function PlanGridView({
                   setParticipantName('')
                 }
               }}
-              placeholder="Enter name..."
-              className="flex-1 px-2 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-950 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              placeholder="Add participant..."
+              className="px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all w-64"
             />
             <button
               onClick={() => {
@@ -215,27 +214,26 @@ export function PlanGridView({
                 }
               }}
               disabled={!participantName.trim()}
-              className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0"
+              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               + Add
             </button>
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-          <div className="grid-scrollbar overflow-x-auto select-none">
-        <table className="border-separate border-spacing-0 w-full text-sm bg-slate-800">
+          {/* Table */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+            <div className="grid-scrollbar overflow-x-auto select-none">
+        <table className="border-separate border-spacing-0 w-auto text-sm bg-slate-800">
           <thead>
             <tr>
-              <th className="sticky left-0 z-20 px-4 py-3 text-left bg-slate-900 font-semibold border border-slate-700 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-900"></th>
+              <th className="sticky left-0 z-20 px-4 py-3 text-left bg-slate-900 font-semibold border border-slate-700 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-900 rounded-tl-xl"></th>
               {monthGroups.map((g, i) => (
                 <th
                   key={i}
                   colSpan={g.span}
                   className={`bg-slate-900/80 py-2 px-2 text-xs uppercase tracking-wide text-slate-400 font-medium border border-slate-700 min-w-[32px] ${
                     i < monthGroups.length - 1 ? 'border-r-2 border-slate-600' : ''
-                  }`}
+                  } ${i === monthGroups.length - 1 ? 'rounded-tr-xl' : ''}`}
                 >
                   {g.label}
                 </th>
@@ -246,7 +244,7 @@ export function PlanGridView({
               {dates.map((d) => (
                 <th
                   key={d}
-                  className={`py-2.5 px-2 text-sm font-semibold bg-slate-900/50 text-slate-300 border border-slate-700 border-b-2 border-b-blue-500/30 min-w-[40px] ${
+                  className={`py-2.5 px-2 text-sm font-semibold bg-slate-900/50 text-slate-300 border border-slate-700 border-b-2 border-b-blue-500/30 w-[48px] min-w-[48px] max-w-[48px] ${
                     monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
                   }`}
                 >
@@ -325,7 +323,7 @@ export function PlanGridView({
                   return (
                     <td
                       key={d}
-                      className={`text-center py-2.5 px-2 border border-slate-700 cursor-pointer transition-colors ${
+                      className={`text-center align-middle border border-slate-700 cursor-pointer transition-colors w-[48px] min-w-[48px] max-w-[48px] h-[48px] ${
                         available ? 'bg-blue-500/15 hover:bg-blue-500/25' : 'hover:bg-slate-700/30'
                       } ${
                         monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
@@ -337,7 +335,7 @@ export function PlanGridView({
                       onMouseOver={() => handleCellMouseOver(p.id, d)}
                     >
                       <button
-                        className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all hover:scale-110 ${
+                        className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all hover:scale-110 mx-auto ${
                           available
                             ? `bg-success text-white shadow-sm shadow-success/20 ${selected ? 'ring-2 ring-success ring-opacity-60 scale-105' : ''}`
                             : `bg-slate-700 text-slate-400 hover:bg-slate-600 ${selected ? 'ring-2 ring-slate-500 ring-opacity-60 scale-105' : ''}`
@@ -353,18 +351,18 @@ export function PlanGridView({
               </tr>
             ))}
             <tr className="border-t-2 border-t-blue-500/30">
-              <td className="sticky left-0 z-20 px-3 py-2 font-bold text-blue-400 bg-slate-800 whitespace-nowrap border border-slate-700 border-r-2 border-r-blue-500/30 border-t-2 border-t-blue-500/30 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800">
+              <td className="sticky left-0 z-20 px-3 py-2 font-bold text-blue-400 bg-slate-800 whitespace-nowrap border border-slate-700 border-r-2 border-r-blue-500/30 border-t-2 border-t-blue-500/30 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800 rounded-bl-xl">
                 <div className="flex items-center gap-2">
                   <span>Total</span>
                 </div>
               </td>
-              {dates.map((d) => (
+              {dates.map((d, i) => (
                 <td
                   key={d}
                   style={getSummaryStyle(d)}
-                  className={`text-center py-2 px-2 font-extrabold text-base border border-slate-700 border-t-2 border-t-blue-500/30 ${
+                  className={`text-center py-2 px-2 font-extrabold text-base border border-slate-700 border-t-2 border-t-blue-500/30 w-[48px] min-w-[48px] max-w-[48px] ${
                     monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
-                  }`}
+                  } ${i === dates.length - 1 ? 'rounded-br-xl' : ''}`}
                 >
                   {getSummaryCount(d)}
                 </td>
@@ -373,6 +371,7 @@ export function PlanGridView({
           </tbody>
         </table>
           </div>
+        </div>
         </div>
       </div>
     </div>
