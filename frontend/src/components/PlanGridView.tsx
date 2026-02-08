@@ -103,10 +103,10 @@ export function PlanGridView({
     const s = gridData.summary_by_date.find((x) => x.date === date)
     return s ? s.count : 0
   }
+  const maxSummaryCount = Math.max(0, ...dates.map((d) => getSummaryCount(d)))
   const getSummaryStyle = (date: string): React.CSSProperties => {
-    const total = gridData.participants.length
     const free = getSummaryCount(date)
-    const ratio = total === 0 ? 0 : Math.max(0, Math.min(1, free / total))
+    const ratio = maxSummaryCount === 0 ? 0 : Math.max(0, Math.min(1, free / maxSummaryCount))
     // Smooth red -> green gradient
     const r = Math.round(220 * (1 - ratio) + 34 * ratio)
     const g = Math.round(38 * (1 - ratio) + 197 * ratio)
@@ -381,11 +381,11 @@ export function PlanGridView({
 
 function getDatesArray(gridData: PlanGrid): string[] {
   const out: string[] = []
-  let d = new Date(gridData.start_date + 'Z')
-  const end = new Date(gridData.end_date + 'Z')
+  let d = new Date(gridData.start_date + 'T00:00:00Z')
+  const end = new Date(gridData.end_date + 'T00:00:00Z')
   while (d <= end) {
     out.push(d.toISOString().slice(0, 10))
-    d.setDate(d.getDate() + 1)
+    d.setUTCDate(d.getUTCDate() + 1)
   }
   return out
 }
