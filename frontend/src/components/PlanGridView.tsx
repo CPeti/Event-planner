@@ -193,7 +193,7 @@ export function PlanGridView({
         {/* Add Participant Bar */}
         <div className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 mb-8">
           <label className="block text-slate-300 text-sm font-semibold mb-3">Add Participant</label>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <input
               type="text"
               value={participantName}
@@ -205,7 +205,7 @@ export function PlanGridView({
                 }
               }}
               placeholder="Enter name..."
-              className="flex-1 px-4 py-3 bg-slate-950 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="flex-1 px-2 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-950 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
             />
             <button
               onClick={() => {
@@ -215,7 +215,7 @@ export function PlanGridView({
                 }
               }}
               disabled={!participantName.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0"
             >
               + Add
             </button>
