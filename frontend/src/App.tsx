@@ -208,6 +208,19 @@ export default function App() {
               window.location.hash = '#/'
               loadPlans()
             }}
+            onRefresh={async () => {
+              if (currentPlanId) {
+                try {
+                  const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
+                  if (!gridResponse.ok) throw new Error(await gridResponse.text())
+                  const grid = await gridResponse.json()
+                  setGridData(grid)
+                  setError(null)
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : String(e))
+                }
+              }
+            }}
             onSelectionStart={(pid, date) => {
               setSelectionStart({ participantId: pid, date })
               setSelectedCells(new Set([`${pid}|${date}`]))

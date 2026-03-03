@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { PlanGrid } from '../types'
 
 interface PlanGridViewProps {
@@ -18,6 +18,7 @@ interface PlanGridViewProps {
   onDeleteParticipant: (participantId: number) => void
   onRenamePlan: (name: string) => void
   onRenameParticipant: (participantId: number, name: string) => void
+  onRefresh: () => void
 }
 
 export function PlanGridView({
@@ -36,6 +37,7 @@ export function PlanGridView({
   onDeleteParticipant,
   onRenamePlan,
   onRenameParticipant,
+  onRefresh,
 }: PlanGridViewProps) {
   const [participantName, setParticipantName] = useState('')
   const [isEditingPlanName, setIsEditingPlanName] = useState(false)
@@ -43,6 +45,19 @@ export function PlanGridView({
   const [editingParticipantId, setEditingParticipantId] = useState<number | null>(null)
   const [editingParticipantName, setEditingParticipantName] = useState('')
   const isDraggingRef = useRef(false)
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null)
+  const [refreshSortVersion, setRefreshSortVersion] = useState(0)
+
+  // Sort participants once on initial load, or when participants change, or when manually refreshed
+  const participantIds = gridData?.participants.map((p) => p.id).join(',') ?? ''
+  const sortedParticipants = useMemo(() => {
+    if (!gridData) return []
+    return [...gridData.participants].sort((a, b) => {
+      const aCount = gridData.availabilities.filter((av) => av.participant_id === a.id).length
+      const bCount = gridData.availabilities.filter((av) => av.participant_id === b.id).length
+      return bCount - aCount
+    })
+  }, [participantIds, refreshSortVersion])
 
   useEffect(() => {
     const handleWindowMouseUp = () => endSelection()
@@ -75,6 +90,8 @@ export function PlanGridView({
   const monthGroups = getMonthGroups(dates)
   const monthBoundaryDates = getMonthBoundaryDates(dates)
   const shareUrl = window.location.origin + window.location.pathname + '#/plan/' + gridData.plan.share_token
+
+
 
   const handleCellMouseDown = (participantId: number, date: string) => {
     isDraggingRef.current = true
@@ -193,12 +210,24 @@ export function PlanGridView({
               >
                 ✎
               </button>
-              <button
-                onClick={() => navigator.clipboard.writeText(shareUrl)}
-                className="ml-auto px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
-              >
-                Copy link
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    onRefresh()
+                    setRefreshSortVersion(v => v + 1)
+                  }}
+                  className="px-4 py-2 bg-slate-700 border border-slate-600 hover:border-slate-500 hover:bg-slate-600 active:bg-slate-800 text-white font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  Refresh
+                </button>
+                <button
+                  onClick={() => navigator.clipboard.writeText(shareUrl)}
+                  className="px-4 py-2 bg-slate-700 border border-slate-600 hover:border-slate-500 hover:bg-slate-600 active:bg-slate-800 text-white font-medium rounded-lg transition-colors"
+                >
+                  Copy link
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -307,20 +336,28 @@ export function PlanGridView({
             </tr>
             <tr>
               <th className="sticky left-0 z-30 py-2 px-4 text-left font-medium text-xs text-slate-300 uppercase tracking-wide border border-slate-700 border-b-2 border-b-blue-500/30 bg-slate-900 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-900">Name</th>
-              {dates.map((d) => (
+              {dates.map((d) => {
+                const dayOfWeek = new Date(d + 'T00:00:00Z').getUTCDay()
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                return (
                 <th
                   key={d}
-                  className={`py-2.5 px-2 text-sm font-semibold bg-slate-900/50 text-slate-300 border border-slate-700 border-b-2 border-b-blue-500/30 w-[48px] min-w-[48px] max-w-[48px] ${
+                  className={`py-2.5 px-2 text-sm font-semibold bg-slate-900/50 border border-slate-700 border-b-2 border-b-blue-500/30 w-[48px] min-w-[48px] max-w-[48px] transition-colors ${
+                    isWeekend ? 'text-blue-400' : 'text-slate-300'
+                  } ${
                     monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
+                  } ${
+                    hoveredDate === d ? 'bg-slate-700/40' : ''
                   }`}
                 >
                   {new Date(d + 'Z').getDate()}
                 </th>
-              ))}
+                )
+              })}
             </tr>
           </thead>
           <tbody>
-            {gridData.participants.map((p) => (
+            {sortedParticipants.map((p) => (
               <tr key={p.id} className="group hover:bg-slate-700/30 transition-colors">
                 <td className="sticky left-0 z-10 px-3 py-3 text-left bg-slate-800 group-hover:bg-slate-700 font-medium border border-slate-700 border-r-2 border-r-blue-500/20 relative after:absolute after:top-0 after:right-[-1px] after:h-full after:w-[6px] after:bg-slate-800 group-hover:after:bg-slate-700 transition-colors">
                   {editingParticipantId === p.id ? (
@@ -386,14 +423,15 @@ export function PlanGridView({
                 {dates.map((d) => {
                   const availability = getAvailability(p.id, d)
                   const selected = isCellSelected(p.id, d)
+                  const isColHovered = hoveredDate === d
                   return (
                     <td
                       key={d}
                       className={`text-center align-middle border border-slate-700 cursor-pointer transition-colors w-[48px] min-w-[48px] max-w-[48px] h-[48px] ${
-                        availability === 'yes' ? 'bg-green-500/15 hover:bg-green-500/25' :
-                        availability === 'maybe' ? 'bg-yellow-500/15 hover:bg-yellow-500/25' :
-                        availability === 'no' ? 'bg-red-500/15 hover:bg-red-500/25' :
-                        'hover:bg-slate-700/30'
+                        availability === 'yes' ? (isColHovered ? 'bg-green-500/25' : 'bg-green-500/15 hover:bg-green-500/25') :
+                        availability === 'maybe' ? (isColHovered ? 'bg-yellow-500/25' : 'bg-yellow-500/15 hover:bg-yellow-500/25') :
+                        availability === 'no' ? (isColHovered ? 'bg-red-500/25' : 'bg-red-500/15 hover:bg-red-500/25') :
+                        (isColHovered ? 'bg-slate-700/30' : 'hover:bg-slate-700/30')
                       } ${
                         monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
                       }`}
@@ -401,7 +439,8 @@ export function PlanGridView({
                         e.preventDefault()
                         handleCellMouseDown(p.id, d)
                       }}
-                      onMouseOver={() => handleCellMouseOver(p.id, d)}
+                      onMouseOver={() => { handleCellMouseOver(p.id, d); setHoveredDate(d) }}
+                      onMouseLeave={() => setHoveredDate(null)}
                     >
                       <button
                         className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all hover:scale-110 mx-auto ${
@@ -430,9 +469,11 @@ export function PlanGridView({
                 <td
                   key={d}
                   style={getSummaryStyle(d)}
-                  className={`text-center py-2 px-2 font-extrabold text-base border border-slate-700 border-t-2 border-t-blue-500/30 w-[48px] min-w-[48px] max-w-[48px] ${
+                  className={`text-center py-2 px-2 font-extrabold text-base border border-slate-700 border-t-2 border-t-blue-500/30 w-[48px] min-w-[48px] max-w-[48px] transition-colors ${
                     monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
-                  } ${i === dates.length - 1 ? 'rounded-br-xl' : ''}`}
+                  } ${i === dates.length - 1 ? 'rounded-br-xl' : ''} ${
+                    hoveredDate === d ? 'brightness-125' : ''
+                  }`}
                 >
                   {getSummaryDisplayValue(d)}
                 </td>
