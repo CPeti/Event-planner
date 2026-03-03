@@ -19,6 +19,7 @@ export default function App() {
   // Multi-select state
   const [selectionStart, setSelectionStart] = useState<{ participantId: number; date: string } | null>(null)
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
+  const [activeStatus, setActiveStatus] = useState<'yes' | 'maybe' | 'no' | 'unknown' | null>(null)
 
   useEffect(() => {
     const token = getTokenFromHash()
@@ -198,6 +199,8 @@ export default function App() {
             currentPlanId={currentPlanId}
             selectionStart={selectionStart}
             selectedCells={selectedCells}
+            activeStatus={activeStatus}
+            onSetActiveStatus={setActiveStatus}
             onBack={() => {
               setCurrentView('list')
               setCurrentPlanId(null)
@@ -233,19 +236,34 @@ export default function App() {
               setSelectedCells(newSelected)
             }}
             onApplySelection={async () => {
-              if (!currentPlanId || !gridData || selectedCells.size === 0) return
-              const firstKey = Array.from(selectedCells)[0]
-              const [pidStr, date] = firstKey.split('|')
-              const pid = parseInt(pidStr)
-              const currentAvail = gridData.availabilities.some(
-                (a) => a.participant_id === pid && a.date === date && a.is_available
-              )
-              const newValue = !currentAvail
+              if (!currentPlanId || !gridData || selectedCells.size === 0 || !selectionStart) return
+              
+              let newStatus: 'yes' | 'maybe' | 'no' | 'unknown'
+              
+              if (activeStatus !== null) {
+                newStatus = activeStatus
+              } else {
+                const currentCell = gridData.availabilities.find(
+                  (a) => a.participant_id === selectionStart.participantId && a.date === selectionStart.date
+                )
+                const currentStatus = currentCell ? currentCell.status : 'unknown'
+                
+                if (selectedCells.size === 1) {
+                  // Single click: cycle to the next value
+                  if (currentStatus === 'unknown') newStatus = 'yes'
+                  else if (currentStatus === 'yes') newStatus = 'maybe'
+                  else if (currentStatus === 'maybe') newStatus = 'no'
+                  else newStatus = 'unknown'
+                } else {
+                  // Dragging: spread the EXACT current value of the starting cell
+                  newStatus = currentStatus
+                }
+              }
               
               try {
                 const payload = Array.from(selectedCells).map((key) => {
                   const [p, d] = key.split('|')
-                  return { participant_id: parseInt(p), date: d, is_available: newValue }
+                  return { participant_id: parseInt(p), date: d, status: newStatus }
                 })
 
                 const response = await fetch(`${API_URL}/api/plans/${currentPlanId}/availabilities/batch`, {

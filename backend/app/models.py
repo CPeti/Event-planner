@@ -31,14 +31,14 @@ class Participant(Base):
 
 
 class Availability(Base):
-    """Sparse: only rows where is_available is True. No row = not available."""
+    """Sparse: only rows where status is 'yes', 'maybe', or 'no'. No row = 'unknown'."""
     __tablename__ = "availabilities"
 
     id = Column(Integer, primary_key=True, index=True)
     plan_id = Column(Integer, ForeignKey("plans.id", ondelete="CASCADE"), nullable=False)
     participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
     date = Column(Date, nullable=False)
-    is_available = Column(Boolean, default=True, nullable=False)
+    status = Column(String(10), default="yes", nullable=False)
 
     __table_args__ = (UniqueConstraint("plan_id", "participant_id", "date", name="uq_plan_participant_date"),)
 

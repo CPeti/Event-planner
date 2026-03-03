@@ -101,8 +101,10 @@ async def get_plan_grid(plan_id: int, db: AsyncSession = Depends(get_db)):
     summary_by_date: list[GridSummary] = []
     d = start
     while d <= end:
-        count = sum(1 for a in availabilities if a.date == d and a.is_available)
-        summary_by_date.append(GridSummary(date=d, count=count))
+        yes_count = sum(1 for a in availabilities if a.date == d and a.status == "yes")
+        maybe_count = sum(1 for a in availabilities if a.date == d and a.status == "maybe")
+        no_count = sum(1 for a in availabilities if a.date == d and a.status == "no")
+        summary_by_date.append(GridSummary(date=d, yes_count=yes_count, maybe_count=maybe_count, no_count=no_count))
         d = d + timedelta(days=1)
 
     return PlanGrid(

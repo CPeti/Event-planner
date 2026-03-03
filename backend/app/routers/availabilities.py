@@ -20,7 +20,7 @@ async def list_availabilities(plan_id: int, db: AsyncSession = Depends(get_db)):
 async def toggle_availability(
     plan_id: int, body: AvailabilityToggle, db: AsyncSession = Depends(get_db)
 ):
-    """Sparse: if is_available=True, upsert a row; if False, delete the row if it exists."""
+    """Sparse: if status is 'yes', 'maybe', or 'no', upsert a row; if 'unknown', delete the row if it exists."""
     result = await db.execute(select(Plan).where(Plan.id == plan_id))
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Plan not found")
@@ -32,7 +32,7 @@ async def toggle_availability(
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Participant not found")
 
-    if body.is_available:
+    if body.status != "unknown":
         # Upsert: get or create
         r = await db.execute(
             select(Availability).where(
@@ -43,7 +43,7 @@ async def toggle_availability(
         )
         existing = r.scalar_one_or_none()
         if existing:
-            existing.is_available = True
+            existing.status = body.status
             await db.flush()
             await db.refresh(existing)
             return existing
@@ -51,7 +51,7 @@ async def toggle_availability(
             plan_id=plan_id,
             participant_id=body.participant_id,
             date=body.date,
-            is_available=True,
+            status=body.status,
         )
         db.add(avail)
         await db.flush()
@@ -98,7 +98,7 @@ async def batch_toggle_availability(
     deleted_count = 0
 
     for item in body:
-        if item.is_available:
+        if item.status != "unknown":
             r = await db.execute(
                 select(Availability).where(
                     Availability.plan_id == plan_id,
@@ -108,14 +108,14 @@ async def batch_toggle_availability(
             )
             existing = r.scalar_one_or_none()
             if existing:
-                existing.is_available = True
+                existing.status = item.status
             else:
                 db.add(
                     Availability(
                         plan_id=plan_id,
                         participant_id=item.participant_id,
                         date=item.date,
-                        is_available=True,
+                        status=item.status,
                     )
                 )
             updated += 1
