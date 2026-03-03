@@ -220,18 +220,13 @@ export default function App() {
               const minDateIdx = Math.min(startDateIdx, endDateIdx)
               const maxDateIdx = Math.max(startDateIdx, endDateIdx)
               
-              const startParticipantIdx = gridData.participants.findIndex((p) => p.id === startCell.participantId)
-              const endParticipantIdx = gridData.participants.findIndex((p) => p.id === endCell.participantId)
-              const minParticipantIdx = Math.min(startParticipantIdx, endParticipantIdx)
-              const maxParticipantIdx = Math.max(startParticipantIdx, endParticipantIdx)
+              // Lock to the starting participant's row
+              const pid = startCell.participantId
               
               const newSelected = new Set<string>()
-              for (let pi = minParticipantIdx; pi <= maxParticipantIdx; pi++) {
-                for (let di = minDateIdx; di <= maxDateIdx; di++) {
-                  const p = gridData.participants[pi]
-                  const d = dates[di]
-                  if (p && d) newSelected.add(`${p.id}|${d}`)
-                }
+              for (let di = minDateIdx; di <= maxDateIdx; di++) {
+                const d = dates[di]
+                if (d) newSelected.add(`${pid}|${d}`)
               }
               setSelectedCells(newSelected)
             }}
@@ -249,17 +244,69 @@ export default function App() {
                 const currentStatus = currentCell ? currentCell.status : 'unknown'
                 
                 if (selectedCells.size === 1) {
-                  // Single click: cycle to the next value
                   if (currentStatus === 'unknown') newStatus = 'yes'
                   else if (currentStatus === 'yes') newStatus = 'maybe'
                   else if (currentStatus === 'maybe') newStatus = 'no'
                   else newStatus = 'unknown'
                 } else {
-                  // Dragging: spread the EXACT current value of the starting cell
                   newStatus = currentStatus
                 }
               }
               
+              // --- Optimistic update: apply changes to gridData immediately ---
+              const previousGridData = gridData
+              const updatedAvailabilities = [...gridData.availabilities]
+
+              for (const key of selectedCells) {
+                const [pStr, d] = key.split('|')
+                const pid = parseInt(pStr)
+                const existingIdx = updatedAvailabilities.findIndex(
+                  (a) => a.participant_id === pid && a.date === d
+                )
+
+                if (newStatus === 'unknown') {
+                  // Remove the availability row (sparse model)
+                  if (existingIdx !== -1) updatedAvailabilities.splice(existingIdx, 1)
+                } else if (existingIdx !== -1) {
+                  // Update existing
+                  updatedAvailabilities[existingIdx] = { ...updatedAvailabilities[existingIdx], status: newStatus }
+                } else {
+                  // Add new (use a temporary negative id)
+                  updatedAvailabilities.push({
+                    id: -(Date.now() + Math.random()),
+                    plan_id: currentPlanId,
+                    participant_id: pid,
+                    date: d,
+                    status: newStatus,
+                  })
+                }
+              }
+
+              // Recompute summary_by_date
+              const dates = getDatesArray(gridData)
+              const summaryMap = new Map<string, { yes: number; maybe: number; no: number }>()
+              for (const d of dates) summaryMap.set(d, { yes: 0, maybe: 0, no: 0 })
+              for (const a of updatedAvailabilities) {
+                const s = summaryMap.get(a.date)
+                if (s) {
+                  if (a.status === 'yes') s.yes++
+                  else if (a.status === 'maybe') s.maybe++
+                  else if (a.status === 'no') s.no++
+                }
+              }
+              const updatedSummary = dates.map((d) => {
+                const s = summaryMap.get(d)!
+                return { date: d, yes_count: s.yes, maybe_count: s.maybe, no_count: s.no }
+              })
+
+              setGridData({
+                ...gridData,
+                availabilities: updatedAvailabilities,
+                summary_by_date: updatedSummary,
+              })
+              setSelectedCells(new Set())
+
+              // --- Fire API call in background ---
               try {
                 const payload = Array.from(selectedCells).map((key) => {
                   const [p, d] = key.split('|')
@@ -272,13 +319,10 @@ export default function App() {
                   body: JSON.stringify(payload),
                 })
                 if (!response.ok) throw new Error(await response.text())
-
-                setSelectedCells(new Set())
-                const gridResponse = await fetch(`${API_URL}/api/plans/${currentPlanId}/grid`)
-                const grid = await gridResponse.json()
-                setGridData(grid)
                 setError(null)
               } catch (e) {
+                // Rollback on error
+                setGridData(previousGridData)
                 setError(e instanceof Error ? e.message : String(e))
               }
             }}
