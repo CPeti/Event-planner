@@ -7,6 +7,8 @@ interface PlanGridViewProps {
   currentPlanId: number | null
   selectionStart: { participantId: number; date: string } | null
   selectedCells: Set<string>
+  activeStatus: 'yes' | 'maybe' | 'no' | 'unknown' | null
+  onSetActiveStatus: (status: 'yes' | 'maybe' | 'no' | 'unknown' | null) => void
   onBack: () => void
   onSelectionStart: (participantId: number, date: string) => void
   onSelectionUpdate: (start: { participantId: number; date: string }, end: { participantId: number; date: string }) => void
@@ -23,6 +25,8 @@ export function PlanGridView({
   loading,
   selectionStart,
   selectedCells,
+  activeStatus,
+  onSetActiveStatus,
   onBack,
   onSelectionStart,
   onSelectionUpdate,
@@ -97,16 +101,25 @@ export function PlanGridView({
   }
 
   const isCellSelected = (participantId: number, date: string) => selectedCells.has(`${participantId}|${date}`)
-  const isAvailable = (participantId: number, date: string) =>
-    gridData.availabilities.some((a) => a.participant_id === participantId && a.date === date && a.is_available)
-  const getSummaryCount = (date: string) => {
-    const s = gridData.summary_by_date.find((x) => x.date === date)
-    return s ? s.count : 0
+  const getAvailability = (participantId: number, date: string) => {
+    const a = gridData.availabilities.find((a) => a.participant_id === participantId && a.date === date)
+    return a ? a.status : 'unknown'
   }
-  const maxSummaryCount = Math.max(0, ...dates.map((d) => getSummaryCount(d)))
+  
+  const getSummaryScore = (date: string) => {
+    const s = gridData.summary_by_date.find((x) => x.date === date)
+    if (!s) return 0
+    return s.yes_count + (s.maybe_count * 0.5) // Score for coloring
+  }
+  const getSummaryDisplayValue = (date: string) => {
+    const s = gridData.summary_by_date.find((x) => x.date === date)
+    return s ? s.yes_count + (s.maybe_count * 0.5) : 0
+  }
+
+  const maxSummaryScore = Math.max(0, ...dates.map((d) => getSummaryScore(d)))
   const getSummaryStyle = (date: string): React.CSSProperties => {
-    const free = getSummaryCount(date)
-    const ratio = maxSummaryCount === 0 ? 0 : Math.max(0, Math.min(1, free / maxSummaryCount))
+    const score = getSummaryScore(date)
+    const ratio = maxSummaryScore === 0 ? 0 : Math.max(0, Math.min(1, score / maxSummaryScore))
     // Smooth red -> green gradient
     const r = Math.round(220 * (1 - ratio) + 34 * ratio)
     const g = Math.round(38 * (1 - ratio) + 197 * ratio)
@@ -192,7 +205,7 @@ export function PlanGridView({
 
         <div className="max-w-fit mx-auto">
           {/* Add Participant Bar */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 w-full">
             <input
               type="text"
               value={participantName}
@@ -216,8 +229,61 @@ export function PlanGridView({
               disabled={!participantName.trim()}
               className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
-              + Add
+              Add
             </button>
+            <div className="ml-auto flex items-center gap-2 border border-slate-700 py-1.5 px-2 rounded-lg bg-slate-900">
+              <span className="text-sm font-medium text-slate-400 px-2 mr-1">Paint:</span>
+              <button
+                onClick={() => onSetActiveStatus(null)}
+                className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all flex items-center gap-1.5 ${
+                  activeStatus === null 
+                    ? 'bg-blue-600 text-white shadow-sm ring-2 ring-white scale-105' 
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                Click
+              </button>
+              <button
+                onClick={() => onSetActiveStatus('yes')}
+                className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
+                  activeStatus === 'yes' 
+                    ? 'bg-green-500 text-white shadow-sm shadow-green-500/20 ring-2 ring-white scale-105' 
+                    : 'bg-green-500/15 text-green-500 hover:bg-green-500/25'
+                }`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded text-xs font-bold select-none shadow-sm pb-[1px]">✓</span>
+              </button>
+              <button
+                onClick={() => onSetActiveStatus('maybe')}
+                className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
+                  activeStatus === 'maybe' 
+                    ? 'bg-yellow-500 text-white shadow-sm shadow-yellow-500/20 ring-2 ring-white scale-105' 
+                    : 'bg-yellow-500/15 text-yellow-500 hover:bg-yellow-500/25'
+                }`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-white rounded text-xs font-bold select-none shadow-sm pb-[1px]">?</span>
+              </button>
+              <button
+                onClick={() => onSetActiveStatus('no')}
+                className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
+                  activeStatus === 'no' 
+                    ? 'bg-red-500 text-white shadow-sm shadow-red-500/20 ring-2 ring-white scale-105' 
+                    : 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
+                }`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded text-xs font-bold select-none shadow-sm pb-[1px]">✕</span>
+              </button>
+              <button
+                onClick={() => onSetActiveStatus('unknown')}
+                className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
+                  activeStatus === 'unknown' 
+                    ? 'bg-slate-600 text-white shadow-sm shadow-slate-600/20 ring-2 ring-white scale-105' 
+                    : 'bg-slate-700/30 text-slate-400 hover:bg-slate-700/50'
+                }`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center bg-slate-700 text-slate-400 rounded text-xs font-bold select-none shadow-sm pb-[1px]">○</span>
+              </button>
+            </div>
           </div>
 
           {/* Table */}
@@ -318,13 +384,16 @@ export function PlanGridView({
                   )}
                 </td>
                 {dates.map((d) => {
-                  const available = isAvailable(p.id, d)
+                  const availability = getAvailability(p.id, d)
                   const selected = isCellSelected(p.id, d)
                   return (
                     <td
                       key={d}
                       className={`text-center align-middle border border-slate-700 cursor-pointer transition-colors w-[48px] min-w-[48px] max-w-[48px] h-[48px] ${
-                        available ? 'bg-blue-500/15 hover:bg-blue-500/25' : 'hover:bg-slate-700/30'
+                        availability === 'yes' ? 'bg-green-500/15 hover:bg-green-500/25' :
+                        availability === 'maybe' ? 'bg-yellow-500/15 hover:bg-yellow-500/25' :
+                        availability === 'no' ? 'bg-red-500/15 hover:bg-red-500/25' :
+                        'hover:bg-slate-700/30'
                       } ${
                         monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
                       }`}
@@ -336,14 +405,15 @@ export function PlanGridView({
                     >
                       <button
                         className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-all hover:scale-110 mx-auto ${
-                          available
-                            ? `bg-success text-white shadow-sm shadow-success/20 ${selected ? 'ring-2 ring-success ring-opacity-60 scale-105' : ''}`
-                            : `bg-slate-700 text-slate-400 hover:bg-slate-600 ${selected ? 'ring-2 ring-slate-500 ring-opacity-60 scale-105' : ''}`
-                        }`}
-                        title={available ? 'Free' : 'Busy'}
+                          availability === 'yes' ? 'bg-green-500 text-white shadow-sm shadow-green-500/20' :
+                          availability === 'maybe' ? 'bg-yellow-500 text-white shadow-sm shadow-yellow-500/20' :
+                          availability === 'no' ? 'bg-red-500 text-white shadow-sm shadow-red-500/20' :
+                          'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                        } ${selected ? 'ring-2 ring-white ring-opacity-100 scale-105' : ''}`}
+                        title={availability === 'yes' ? 'Yes' : availability === 'maybe' ? 'Maybe' : availability === 'no' ? 'No' : 'Unknown'}
                         onContextMenu={(e) => e.preventDefault()}
                       >
-                        {available ? '✓' : '○'}
+                        {availability === 'yes' ? '✓' : availability === 'maybe' ? '?' : availability === 'no' ? '✕' : '○'}
                       </button>
                     </td>
                   )
@@ -364,7 +434,7 @@ export function PlanGridView({
                     monthBoundaryDates.has(d) ? 'border-r-2 border-slate-600' : ''
                   } ${i === dates.length - 1 ? 'rounded-br-xl' : ''}`}
                 >
-                  {getSummaryCount(d)}
+                  {getSummaryDisplayValue(d)}
                 </td>
               ))}
             </tr>

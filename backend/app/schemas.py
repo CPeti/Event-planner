@@ -46,11 +46,13 @@ class ParticipantRead(ParticipantBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+from typing import Literal
+
 class AvailabilityBase(BaseModel):
     plan_id: int
     participant_id: int
     date: date
-    is_available: bool = True
+    status: Literal["yes", "maybe", "no"] = "yes"
 
 
 class AvailabilityCreate(AvailabilityBase):
@@ -67,7 +69,7 @@ class AvailabilityToggle(BaseModel):
     """Set availability for one participant on one date. Sparse: only send when available."""
     participant_id: int
     date: date
-    is_available: bool
+    status: Literal["yes", "maybe", "no", "unknown"]
 
 
 class AvailabilityBatchResult(BaseModel):
@@ -76,9 +78,11 @@ class AvailabilityBatchResult(BaseModel):
 
 
 class GridSummary(BaseModel):
-    """Per-date count of available participants."""
+    """Per-date count of available participants based on categorical status."""
     date: date
-    count: int
+    yes_count: int
+    maybe_count: int
+    no_count: int
 
 
 class PlanGrid(BaseModel):

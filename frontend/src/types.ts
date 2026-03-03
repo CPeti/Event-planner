@@ -19,12 +19,14 @@ export interface Availability {
   plan_id: number
   participant_id: number
   date: string
-  is_available: boolean
+  status: 'yes' | 'maybe' | 'no'
 }
 
 export interface GridSummary {
   date: string
-  count: number
+  yes_count: number
+  maybe_count: number
+  no_count: number
 }
 
 export interface PlanGrid {
@@ -38,4 +40,4 @@ export interface PlanGrid {
 
 export type PlanCreate = Pick<Plan, 'name' | 'start_date' | 'end_date'> & { created_by?: string }
 export type ParticipantCreate = Pick<Participant, 'name'> & { plan_id: number }
-export type AvailabilityToggle = { participant_id: number; date: string; is_available: boolean }
+export type AvailabilityToggle = { participant_id: number; date: string; status: 'yes' | 'maybe' | 'no' | 'unknown' }

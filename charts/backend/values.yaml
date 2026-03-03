@@ -1,0 +1,12 @@
+image:
+  repository: event-planner-backend
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+env:
+  # This points to the infra database service
+  DATABASE_URL: "postgresql+asyncpg://postgres:postgrespassword@infra-db:5432/event_planner"

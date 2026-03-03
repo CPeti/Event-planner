@@ -11,17 +11,7 @@ from .routers import plans, participants, availabilities
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        # Add share_token to existing plans table (SQLite) if missing
-        if "sqlite" in str(engine.url):
-            def add_share_token_if_missing(sync_conn):
-                cur = sync_conn.execute(
-                    text("SELECT name FROM pragma_table_info('plans') WHERE name = 'share_token'")
-                )
-                if cur.fetchone() is None:
-                    sync_conn.execute(text("ALTER TABLE plans ADD COLUMN share_token VARCHAR(64)"))
-            await conn.run_sync(add_share_token_if_missing)
+    # Migrations are handled by `alembic upgrade head` in the Dockerfile CMD
     yield
     await engine.dispose()
 

@@ -1,0 +1,5 @@
+postgres:
+  user: postgres
+  password: postgrespassword
+  db: event_planner
+  port: 5432
